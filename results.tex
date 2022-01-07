@@ -1,0 +1,107 @@
+\section{Results}
+
+\subsection{Self-supervised fine-tuning}
+
+We saved the checkpoints of the self-supervised feature extraction model at each epoch of training, allowing us to investigate the amount of time needed to reach good WSI classification performances. We computed the embeddings of the whole dataset with each of the checkpoints and trained a WSI classifier from them. Figure \ref{fig:ssl_epochs} reports the performances of WSI classification models for each of these checkpoints.
+SSL training led to a higher Weighted Accuracy than using ImageNet weights after 3 epochs and resulted in a gain of  +4.8\% after 100 epochs.
+Interestingly, as little as 6 epochs of training are enough to gain 4\% of Weighted Accuracy: a significant boost in performance is possible with 50 GPU-hours of training.
+We then observe a small increase in performance until the 100th epochs.
+
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{figures/epochs_ssl.jpeg}
+\caption{\textbf{Weighted Accuracy evolution} - Weighted Accuracy evolution on WS classification task with respect to the number of epochs of SSL training}
+\label{fig:ssl_epochs}
+\end{figure}
+
+
+\subsection{Pre-training policy comparison}
+To compare the weights obtained with the various supervision levels, we ran a 3-fold cross-validation on the WS classification task and  summarized the results in table \ref{tab:pretraining}. 
+The results indicate that SSL training substantially improves the WSI classification performance. In contrast, we see that initializing the feature extractor with fully-supervised weights gives an equivalent or poorer performance than any other initialization. SSL training allows us to extract rich features that are generic, yet still relevant to the dataset  (unlike ImageNet). On the other hand, fully supervised features are probably too specific and seem to not represent the full diversity of the image data. The joint-optimization process manages to balance out generic and specialized features without neutralizing them: mixing the supervision levels brings significant improvements (+2\%) to the performance, leading to a Weighted Accuracy of 0.945. \\
+We additionally compared the benefits introduced by the cost-sensitive loss [REF equation SORS] with the cross-entropy loss. Our results show that with ImageNet weights the SORS loss improves the Weighted Accuracy by 1\% and the accuracy by 3\%. \\
+In conclusion, the combination of the SSL pre-trained model, its fully supervised fine-tuning, and the cost-sensitive loss leads to a notable improvement of 8 Weighted Accuracy points over the baseline MIL-imagenet model.
+
+
+\begin{table}[!t]
+\centering
+\begin{tabular}{ccc}
+\hline
+                    & \textbf{Accuracy}        & \textbf{SFP\_metric}     \\ \hline
+imagenet+ce         & 0.758 +/- 0.034          & 0.865 +/- 0.023          \\
+imagenet+sors       & 0.787 +/- 0.032          & 0.877 +/- 0.029          \\
+supervised+sors     & 0.772 +/- 0.055          & 0.874 +/- 0.027          \\
+ssl+sors            & 0.803 +/- 0.016          & 0.925 +/- 0.006          \\
+\textbf{mixed+sors} & \textbf{0.845 +/- 0.028} & \textbf{0.945 +/- 0.005} \\ \hline
+\end{tabular}
+
+\caption{\textbf{Pre-training policies} - Performances summary}
+\label{tab:pretraining}
+\end{table}
+
+\subsection{Number of annotations vs Number of epochs}
+
+We have seen that both SSL and supervised training bring an improvement in the WSI classification task. To further investigate the relationship between these two supervision regimes, we trained models with only some of the fully supervised annotations (15, 65, 100\%) on top of intermediate SSL checkpoints.
+Results are reported in table \ref{tab:annots_epochs}. \\
+It appears that without SSL training (or with too few epochs of training), the supervised fine-tuning does not bring additional improvement in WSI classification. This is in line with the work of Chen et al. (Chen, Kornblith, Swersky, et al. 2020) that showed that an SSL model is up to 10x more label efficient than a supervised one. \\
+However, for the 100-epoch checkpoints, we observe an improvement of 2 points of the Weighted Accuracy when using 100\% of the tile annotations.
+Moreover, fine-tuning the models by mixed supervision with too few annotations (15\%) leads to a slight drop in WSI classification performances.
+Finally, we see  a diminution of the standard deviations across splits for the different pre-training policies, showing better stability for longer SSL training and more annotations. \\
+
+We draw different conclusions from these observations:
+\begin{itemize}
+\item In this context, it is always better to pre-train the feature extractor with SSL rather than only invest in annotations.
+\item The supervised fine-tuning needs enough annotations to bring an improvement to the WSI classification task. We can note however that even when considering the 100\% annotation settings, the supervised dataset ( approx. 5000 images) is still rather small in comparison to traditional image datasets.
+\item A full SSL training is mandatory to leverage this small amount of supervised data. 
+\end{itemize}
+
+\begin{table*}[h]
+\centering
+\resizebox{0.7\textwidth}{!}{
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\textbf{} &
+  \textbf{0 Annot.} &
+  \textbf{\begin{tabular}[c]{@{}c@{}}$\sim$1 Annot. / slide\\ (1015 tiles)\end{tabular}} &
+  \textbf{\begin{tabular}[c]{@{}c@{}}$\sim$4 Annot. / slide\\ (3901 tiles)\end{tabular}} &
+  \textbf{\begin{tabular}[c]{@{}c@{}}$\sim$6 Annot. / slide\\ (5926 tiles)\end{tabular}} \\ \hline
+\textbf{ImageNet (no SSL)} & 0,877 +/- 0.029 & 0.872 +/- 0.024 & 0.872 +/- 0.023 & 0,874 +/-0.027           \\ \hline
+\textbf{SSL-epoch10}       & 0,912 +/- 0.019 & 0,907+/- 0.024  & 0,903 +/- 0.029 & 0,916 +/- 0.019          \\ \hline
+\textbf{SSL-epoch50}       & 0,915 +/- 0.014 & 0,913 +/- 0.024 & 0,916 +/- 0.014 & 0,914 +/- 0.022          \\ \hline
+\textbf{SLL-epoch100}      & 0,925 +/- 0.006 & 0,916 +/- 0.010 & 0,921 +/- 0.010 & \textbf{0,945 +/- 0.005} \\ \hline
+\end{tabular}}
+\caption{\textbf{Relationship between self-supervision and full-supervision} - Study on the performance improvement on WS classification for different proportion of labelled data versus different training time of SSL}
+\label{tab:annots_epochs}
+\end{table*}
+
+
+\subsection{Features Visualisations}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=1\textwidth]{figures/filters_class0.pdf}
+\caption{\textbf{Feature Visualization} - Top Features for class "Normal" (0) and associated tiles}
+\label{fig:top_features_0}
+\end{figure*}
+
+\begin{figure*}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/filters_classes_comparison.pdf}
+\caption{\textbf{Feature comparison per class} - The top row displays the top filter for the Mixed Supervised model for each class. The bottom row displays the tile expressing the feature the most}
+\label{fig:features_comp}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=1\textwidth]{figures/feature_redundancy_top1to5_class3.pdf}
+\caption{\textbf{Feature Diversity for the class "Carcinoma" (3) (top 5 features)} - Class "Normal" (0) and top 10 features in Supplementary Materials}
+\label{fig:features_diversity}
+\end{figure*}
+
+
+We generated the pseudo-images of the most important features for each class and each pre-training policy and extracted the related tiles. The Figure \ref{fig:top_features_0} displays the most important features along with the tiles activating each feature the most for the class “Normal” (0). Although interpretation of such pseudo images must be treated carefully, we notice that the features obtained with SSL, supervised and mixed training are indubitably more specialized to histological data than those obtained with ImageNet. Some histological patterns, such as nuclei, squamous cells or basal layers are clearly identifiable in the generated images. The extracted tiles are strongly correlated with class-specific biomarkers. Feature e highlights well organized basal layers, whereas features \textbf{c} and d highlight clouds of regular nuclei. Feature \textbf{g} and \textbf{h} are characteristic of squamous cells (polygonal shapes, stratified organization lying on a straight basal layer). While features from ImageNet (\textbf{a}, \textbf{b}), SSL (\textbf{c}, \textbf{d})  and the supervised model (\textbf{g}, \textbf{h}) focus on the upper half of the cervix epithelium, it appears that features from the mixed supervision model (\textbf{e}, \textbf{f}) are focusing on the lower half which is known to be the relevant region for discrimination  between class Normal (0) and Low Grade (1) (abnormal cells are constricted to the lower third of the epithelium), suggesting that mixed supervision highlights pathologically relevant patterns to a larger extent than the other regimes \citep{who_colposcopy_2020}. \\
+In Figure \ref{fig:features_comp} we can further identify class-related biomarkers for dysplasia and carcinoma grade. Tiles with visible koilocytes (cells with a white halo around the nucleus) have been extracted from the top features for Low Grade class. Koilocytes are symptomatic of infection by Human Papillomavirus  (almost always responsible for precancerous lesions in the cervix,  \citep{who_colposcopy_2020}). High Grade (2) generated image represents disorganised cells with large nuclei and no polarity. For the class “Carcinoma” (3), we observe cluster patterns of large nuclei with irregular aspects (similar to prominent nucleoli), separated by fibrous texture, that can be identified as stroma patterns. All these criteria have been identified in \citep{who_colposcopy_2020} as biomarker patterns for precancerous lesions of the cervix. \\
+In Figure \ref{fig:features_diversity}, we observe that features extracted from ImageNet and SSL models are diverse, in particular, features extracted from SSL reflect rich tissue phenotypes which correlates to their generic capacities of image representations. On the other hand, features extracted with supervised and mixed methods are more redundant. 
+We additionally observe in Figure \ref{fig:features_diversity} that feature visualisation from the mixed model picture realistic histopathological patterns specific to the class. Visualisation for other classes are available in Supplementary Materials.
+
+

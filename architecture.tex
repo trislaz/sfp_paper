@@ -1,0 +1,69 @@
+\section{Proposed Architecture}
+
+\subsection{Multiple Instance Learning and Attention}
+
+In Multiple Instance Learning, we are given sets of samples $B_k = \{x_i | i = 1 \ldots N_k\}$, also called bags. The annotation $y_k$ we are given refers only to the bags and not the individual samples. We assume however, that such tile-level labels exist in principle, but that we just do not have access to them. 
+
+The strategy is now to first map each tile $x_i$ to its encoding $z_i$, which is then mapped to a scalar value $a_i$, often referred to as attention score. The slide representation is then an agglomeration of tile representations $z_i$ and scores $a_i$. The tile representations $z_i$ and attention scores $a_i$ are then agglomerated to build the slide representation $s_k$ which is then further processed by a neural network. The agglomeration can be based on tile selection \citep{campanella_clinical-grade_2019, courtiol_classification_2020}, or on an attention mechanism \citep{ilse_attention-based_2018}, which is today the most widely used strategy. 
+
+\subsection{Self-supervised learning}
+
+Self-supervised learning provides a framework to train neural networks without human supervision. The main goal of self-supervised learning is to learn to extract efficient features with inputs and labels derived from the data itself using a pretext task. Many self-supervised approaches are based on contrastive learning in the feature space. SimCLR, a simple framework relying on data augmentation was introduced in \citep{chen_simple_2020}. Powerful feature representations are learned by maximizing agreement between differently augmented views of the same data point via a contrastive loss applied in the feature space.
+
+An image is transformed through random data augmentation into two new images. They are then embedded using the feature extractor. The two features vectors ($z_i$ and $z_j$) are mapped with a projection head (dense layers) to obtain final vectors $h_i$ and $h_j$ . The feature extractor and projection head are trained to maximize agreement using the contrastive loss. Positive pairs consist of the two augmented views of the same image, the other $2( n - 1 )$ views play the role of negative samples.
+The loss function (NT-Xent) for a positive pair $(i,j)$ is defined as:
+
+\begin{equation}
+\mathcal{L}_{SSL} = -log \frac{exp(sim(h_i, h_j) / \tau}{\sum^{2n}_{k=1} \mathbf{1}_{k \neq i} exp(sim(h_i, h_j) \ \tau } 
+\end{equation}
+\\
+
+Where $sim( u, v ) = \frac{u^{T} v}{|| u ||\cdot|| v ||}$ , the cosine similarity, $\mathbf{1}_{k \neq i \in (0, 1) }$  determines if $k \neq i$ and $\tau$ is a parameter. After convergence, the projection head is discarded and the pretrained feature extractor can be used for subsequent tasks.
+
+\subsection{Cost-sensitive training}
+Instead of the traditional cross-entropy loss we used a cost-aware classification loss, the One-Sided Regression Loss $\mathcal{L}_{SORS}$. First introduced to train SVMs in \citep{tu_one-sided_2010}, this objective function was smoothed and adapted for backpropagation in deep networks in \citep{chung_cost-aware_2016}. When using this loss, the network is trained to predict the class-specific risk   rather than a posterior probability; the decision function chooses the class minimizing this risk.  \\
+The SOSR loss is defined as follows:
+
+\begin{equation}
+\mathcal{L}_{SORS} = \sum_i \sum_j ln(1 + exp(\mathbf{2}_{i,j} \cdot (\hat{c}_i - \mathcal{C}_{i,j})))
+\end{equation}
+
+With $\mathbf{2}_{i,j} = - \mathbf{1}_{i \neq j}  + \mathbf{1}_{i = j}$ , $\hat{p_i}$ the $i$-th coordinate of the network output and $\mathcal{C}$ the error table.
+
+\subsection{Mixed Supervision}
+To be tractable, training of attention-MIL architectures requires freezing the feature extractor weights. While SSL allows the feature extractor to build meaningful representations \citep{saillard_identification_2021, dehaene_self-supervision_2020}, they are not specialized to the actual classification problems we try to solve. Several studies have shown that such SSL models benefit from fine-tuning specific to the downstream task \citep{chen_simple_2020} \\
+We therefore added a training step to leverage the tile-level annotation and fine-tune the self-supervised model.
+However, as the final WSI classification task is not identical to the tile classification task, we suspect that fine-tuning solely on the tile classification task may over-specialize the feature extractor and thus sacrifice the generalizability of SSL (and for this reason ultimately also degrading the WSI classification performances).
+To avoid this, we developed a training process that optimizes the self-supervised and tile-classification objectives jointly.
+
+Two different heads, plugged before the final classification layer, are used to compute both loss functions $\mathcal{L}_{SSL}$  and $\mathcal{L}_{SORS}$
+The final objective $\mathcal{L}$ is then:
+
+\begin{equation}
+\mathcal{L} = \beta \mathcal{L}_{SSL} + (1- \beta) \mathcal{L}_{SORS}
+\label{eq:joint-eq}
+\end{equation}
+
+where $\beta$ is a hyperparameter that has to be tuned. Here, we found $\beta=0.3$ (see Supplementary).
+
+\section{Understanding the feature extractor with Activation Maximization}
+To further understand the features learned by the different pre-training policies (ImageNet, supervised, SSL and mixed), we used Activation Maximization (AM) to visualize extracted features  and provide an explicit  illustration of the specificity learned. \\
+Methods to generate pseudo-images maximizing a feature activation have been introduced in \citep{erhan_visualizing_2009}. This technique consists in synthesizing the images that will maximize one feature activation. It is summarized as follow \citep{nguyen_understanding_2019}: \\
+If we consider a trained classifier with set of parameters $\theta$ that map an input image $x \in \mathbb{R}^{h \times w \times c} $, ($h$ and $w$ are the height and width and $c$ the number of channels) to a probability distribution over the classes, we can formulate the following optimization problem:
+
+\begin{equation}
+x^{*} = \argmax_{x}(\sigma^{l}_{i}(\theta, x))
+\end{equation}
+
+where $\sigma^{l}_{i}(\theta, x)$ is the activation of the neuron i in a given layer l of the classifier. This formulation being a non-convex problem, local maximum can be found by gradient ascent, using the following update step:
+
+\begin{equation}
+x_{t+1} = x_{t} + \epsilon \frac{\partial \sigma^{l}_{i}(\theta, x)}{\partial x_t}
+\end{equation}
+
+
+The optimization process starts with a randomly initialized image. After a few steps, it generates an image which can help to understand what information is being captured by the feature. 
+As we try to visualize meaningful representations of the features, some regularization steps are applied to the random noise input (random crop and rotations to generate more stable visualization, details can be found in Supplementary Materials). To generate filter visualization within  the HE space, we transformed the RGB random image to HE input thanks to color deconvolution \citep{ruifrok_quantification_2001}. This preprocessing allowed to generate images with histology-like colors when converted back to the RGB space. \\
+To select the most meaningful features for each class, we trained a Lasso classifier without bias to classify the extracted feature vectors into the four classes of the dataset for the four pre-training policies. The feature vectors for each tile were first normalized and divided element-wise by the vector of features’ standard deviation across all the tiles.  The L1 regularization factor  $\lambda$ was set to 0.01. Details about Lasso training can be found in Supplementary Materials. Contribution scores for each feature were therefore derived from the weights of the Lasso linear classifier: negative weights were removed and remaining positive weights were divided by their sum to obtain contribution scores $[0, 1]$. By filtering out the negative weights, the contribution score corresponds to the proportion of attribution among the features positively correlated to a class, and allows to select feature capturing semantic information related to the class, leaving out  those containing information for other classes.
+
+

@@ -1,0 +1,72 @@
+\section{Materials and Method}
+
+\subsection{Dataset and Problem Setting}
+
+The Tissue Net Challenge \citep{drivendata_tissuenet_nodate} organized in 2020, the \textit{Soci\'et\'e Française de Pathologie (SFP)} and the \textit{Health Data Hub} aimed at developing methods to automatically grade lesions of the uterine cervix in four classes according to their severity. 
+​​The training dataset for the challenge was made up of biopsy samples from female uterine cervix, focusing on epithelial lesions (Figure \ref{fig:uterine_cervix}). These lesions are often benign but can also be qualified as low grade or high grade depending on the risk of invasion of the underlying conjunctive tissue and evolution into carcinomas. The grade of the lesions depends on the proportion of squamous epithelium affected by dysplastic symptoms. The primary dysplastic symptom corresponds to the thickening of the basal layer. Low-grade squamous intraepithelial lesions (LSIL) are defined as having a dysplastic criteria involving less than one third of the thickness of the epithelium. High-grade squamous intraepithelial lesions (HSIL) indicate a greater proportion of the epithelium composed of undifferentiated basal cells with abnormalities. Carcinoma is diagnosed when abnormal epithelial cells invade the underlying conjunctive tissue. The class of a WSI was determined by the highest lesion's grade present on it.
+
+\begin{figure}[!b]
+\centering
+\includegraphics[width=0.5\textwidth]{figures/cervix_dysplasia.jpg}
+\caption{\textbf{Illustration of Uterine cervix dysplasia} - \citep{national_cancer_institute_definition_2011} }
+\label{fig:uterine_cervix}
+\end{figure}
+
+
+
+
+\subsection{Fully supervised dataset}
+
+5926 annotated Regions of Interest (ROIs) of fixed size 300x300 micrometers were provided. Each ROI had roughly the same size as a tile at 10x magnification and were labeled by the severity of the lesion it contained: “Normal” (0) if tissue was normal, (1) LSIL or (2) HSIL if it presented precancerous lesions that could have malignant potential and (3) invasive squamous carcinoma (Table \ref{tab:data-summary}).
+
+
+\begin{table}[h]
+\centering
+\resizebox{0.5\textwidth}{!}{
+\begin{tabular}{|c|cc|}
+\hline
+\textbf{Classes} & \textbf{Number of Slides} & \textbf{Number of Tiles} \\ \hline
+\textbf{0 (Normal)}      & 270                       & 1923                     \\
+\textbf{1 (Low Grade)}       & 288                       & 1405                     \\
+\textbf{2 (High Grade)}       & 238                       & 1368                     \\
+\textbf{3 (Carcinoma)}       & 219                       & 1230                     \\ \hline
+\textbf{Total}   & 1015                      & 5926                     \\ \hline
+\end{tabular}}
+\caption{Dataset Summary}
+\label{tab:data-summary}
+\end{table}
+
+\subsection{Weakly supervised dataset}
+The dataset was composed of 1015 WSIs acquired from 20 different centers in France at an average resolution of 0.234 +/- 0.0086 mpp (40X). The slide resolution varied slightly due to the multicentric provenance of the data. The class of the WSI corresponded to the class of the most severe lesions it contained (grade from 0 to 3 also). All the native WS image formats were converted to pyramidal TIFF (Tagged Image File Format).
+Both the WSI-level and tile-level labels have been attributed by a consortium of expert pathologists (Table \ref{tab:data-summary}).
+
+\subsection{Misclassification Costs}
+
+Misclassification errors do not lead to equally serious consequences (i.e predicting a benign lesion if it is cancerous is more serious than predicting a LSIL instead of a HSIL). Accordingly, a panel of pathologists established a grading of each of these errors i.e they attributed to each pair of possible outcome $(i,j) \in \{0, 1, 2, 3\}^{2}$ a severity score 
+$0  \leqslant C_{i, j}  \leqslant 1$ (Table \ref{tab:error_table})  \\
+The metric used in the challenge to evaluate and rank the submissions is computed from the average of these misclassification costs.\\
+More precisely, if we name $P(S)$ the prediction of a slide $S$ labelled $l(S)$, the challenge metric $M_{WA}$ is: \\
+
+\begin{equation}
+	M_{WA} = \frac{1}{N} \sum_{S} (1-C_{l(S), P(S)})
+\end{equation}
+with $N$ the number of samples.\\
+The problem is thus framed as a cost-sensitive classification problem, and, to our knowledge, all the winning solutions took awareness of this cost in their training procedure.
+
+\begin{table*}[h]
+\centering
+\resizebox{0.8\textwidth}{!}{\begin{tabular}{l l l l l}
+\toprule
+\tabhead{Ground Truth} & \tabhead{Benign (pred)} & \tabhead{Low-grade (pred)} & \tabhead{High-grade (pred)} & \tabhead{Carcinoma (pred)} \\
+\midrule
+Benign & 0.0 & 0.1 & 0.7 & 1.0\\
+Low-grade & 0.1 & 0.0 & 0.3 & 0.7\\
+High-grade & 0.7 & 0.3 & 0.0 & 0.3\\
+Carcinoma & 1.0 & 0.7 & 0.3 & 0.0\\
+\bottomrule\\
+\end{tabular}}
+\caption{Weighted Accuracy Error Table - Error table to ponderate misclassification according to their gap with the ground truth
+}
+\label{tab:error_table}
+\end{table*}
+

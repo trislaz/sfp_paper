@@ -1,0 +1,143 @@
+%% This is file `medima-template.tex',
+%% 
+%% Copyright 2018 Elsevier Ltd
+%% 
+%% This file is part of the 'Elsarticle Bundle'.
+%% ---------------------------------------------
+%% 
+
+%% It may be distributed under the conditions of the LaTeX Project Public
+%% License, either version 1.2 of this license or (at your option) any
+%% later version.  The latest version of this license is in
+%%    http://www.latex-project.org/lppl.txt
+%% and version 1.2 or later is part of all distributions of LaTeX
+%% version 1999/12/01 or later.
+%% 
+%% The list of all files belonging to the 'Elsarticle Bundle' is
+%% given in the file `manifest.txt'.
+%% 
+%% Template article for Elsevier's document class `elsarticle'
+%% with harvard style bibliographic references
+%%
+%% $Id: medima-template.tex 153 2018-12-01 11:38:32Z rishi $
+%% $URL: http://lenova.river-valley.com/svn/elsarticle/trunk/medima-template.tex $
+%%
+%% Use the option review to obtain double line spacing
+%\documentclass[times,review,preprint,authoryear]{elsarticle}
+
+%% Use the options `twocolumn,final' to obtain the final layout
+%% Use longtitle option to break abstract to multiple pages if overfull.
+%% For Review pdf (With double line spacing)
+%\documentclass[times,twocolumn,review]{elsarticle}
+%% For abstracts longer than one page.
+%\documentclass[times,twocolumn,review,longtitle]{elsarticle}
+%% For Review pdf without preprint line
+%\documentclass[times,twocolumn,review,nopreprintline]{elsarticle}
+%% Final pdf
+\documentclass[times,twocolumn,final]{elsarticle}
+%%
+%\documentclass[times,twocolumn,final,longtitle]{elsarticle}
+%%
+
+
+%% Stylefile to load MEDIMA template
+\usepackage{medima}
+\usepackage{framed,multirow}
+
+%% The amssymb package provides various useful mathematical symbols
+\usepackage{amssymb}
+\usepackage{latexsym}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\newcommand{\tabhead}{\textbf}
+% Following three lines are needed for this document.
+% If you are not loading colors or url, then these are
+% not required.
+\usepackage{url}
+\usepackage{xcolor}
+
+\usepackage{hyperref}
+
+\definecolor{newcolor}{rgb}{.8,.349,.1}
+
+\journal{Medical Image Analysis}
+
+\begin{document}
+
+\verso{M\'elanie Lubrano di Scandalea \textit{et~al.}}
+
+\begin{frontmatter}
+
+\title{Automatic grading of cervical biopsies by combining full and self-supervision}%
+%\tnotetext[tnote1]{This is an example for title footnote coding.}
+
+\author[1,2]{M\'elanie \snm{Lubrano di Scandalea}\corref{cor1}}
+\cortext[cor1]{Corresponding author: 
+  e-mail.: melanie.lubrano@keeneye.ai} 
+\author[2,3,4]{Tristan \snm{Lazard}}
+\author[1]{Guillaume \snm{Balezo}}
+%% Third author's email
+%\ead{author3@author.com}
+\author[1]{Sylvain \snm{Berlemont}}
+\author[2,3,4]{Thomas \snm{Walter}}
+\address[1]{KEEN EYE, 74 Rue du Faubourg Saint Antoine, Paris, 75012, France}
+\address[2]{Centre for Computational Biology (CBIO), MINES ParisTech, PSL University, 60 Boulevard Saint Michel, 75272 Paris Cedex 06, France}
+\address[3]{Institut Curie, 75248 Paris Cedex, France}
+\address[4]{INSERM, U900, 75248 Paris Cedex, France}
+
+\received{}
+\finalform{}
+\accepted{}
+\availableonline{}
+\communicated{}
+
+
+\begin{abstract}
+%%%
+In computational pathology, the application of Deep Learning to the analysis of Whole Slide Images (WSI) has provided results of unprecedented quality. Due to their enormous size, WSIs have to be split into small images (tiles) which are first encoded and whose representations are then agglomerated in order to solve prediction tasks, such as prognosis or treatment response. The choice of the encoding strategy plays a key role in such algorithms. Current approaches include the use of encodings trained on unrelated data sources, full supervision or self-supervision. In particular, self-supervised learning (SSL) offers a great opportunity to exploit all the unlabelled data available. However, it often requires large computational resources and can be challenging to train. On the other end of the spectrum, fully-supervised methods make use of valuable prior knowledge about the data but involve a costly amount of expert time. \\
+This paper proposes a framework to reconcile SSL and full supervision and measures the trade-off between long SSL training and annotation effort, showing that a combination of both has the potential to substantially increase performance. On a recently organized challenge on grading Cervical Biopsies, we show that our mixed supervision scheme reaches high performance (weighted accuracy (WA): 0.945), outperforming both SSL (WA: 0.927) and transfer learning from ImageNet (WA: 0.877). We further provide insights and guidelines to train a clinically impactful classifier with a limited expert and/or computational workload budget. We expect that the combination of full and self-supervision is an interesting strategy for many tasks in computational pathology and will be widely adopted by the field.
+%%%%
+\end{abstract}
+
+\begin{keyword}
+%% MSC codes here, in the form: \MSC code \sep code
+%% or \MSC[2008] code \sep code (2000 is the default)
+%\MSC 41A05\sep 41A10\sep 65D05\sep 65D17
+%% Keywords
+\KWD mixed supervision\sep histopathology \sep whole-slide classification \sep self-supervised learning
+\end{keyword}
+
+\end{frontmatter}
+
+%\linenumbers
+
+%% main text
+
+
+\input{chapters/introduction}
+\input{chapters/related_work}
+\input{chapters/material_method}
+\input{chapters/architecture}
+\input{chapters/expe}
+\input{chapters/results}
+\input{chapters/discussion}
+
+
+
+\section*{Acknowledgments}
+The authors thank Ya\"elle Bellahsen-Harrar for providing insightful trainings about the medical problem. ML was supported by a CIFRE PhD fellowship founded by KEEN EYE, Paris, France and ANRT. TL was supported by a Q-Life PhD fellowship (Q-life ANR-17-CONV-0005). Furthermore, this work was supported by the French government under management of Agence Nationale de la Recherche as part of the "Investissements d'avenir" program, reference ANR-19-P3IA-0001 (PRAIRIE 3IA Institute).
+
+%\section*{References}
+
+%%Harvard
+\bibliographystyle{model2-names.bst}\biboptions{authoryear}
+\bibliography{mybibfile}
+
+
+
+\end{document}
+
+%%
