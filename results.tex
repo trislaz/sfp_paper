@@ -18,8 +18,8 @@ We then observe a small increase in performance until the 100th epochs.
 
 \subsection{Pre-training policy comparison}
 To compare the weights obtained with the various supervision levels, we ran a 3-fold cross-validation on the WS classification task and  summarized the results in table \ref{tab:pretraining}. 
-The results indicate that SSL training substantially improves the WSI classification performance. In contrast, we see that initializing the feature extractor with fully-supervised weights gives an equivalent or poorer performance than any other initialization. SSL training allows us to extract rich features that are generic, yet still relevant to the dataset  (unlike ImageNet). On the other hand, fully supervised features are probably too specific and seem to not represent the full diversity of the image data. The joint-optimization process manages to balance out generic and specialized features without neutralizing them: mixing the supervision levels brings significant improvements (+2\%) to the performance, leading to a Weighted Accuracy of 0.945. \\
-We additionally compared the benefits introduced by the cost-sensitive loss [REF equation SORS] with the cross-entropy loss. Our results show that with ImageNet weights the SORS loss improves the Weighted Accuracy by 1\% and the accuracy by 3\%. \\
+The results indicate that the SSL pre-training substantially improves the WSI classification performance. In contrast, we see that initializing the feature extractor with fully-supervised weights gives an equivalent or poorer performance than any other initialization. SSL pre-training allows us to extract rich features that are generic, yet still relevant to the dataset  (unlike ImageNet). On the other hand, fully supervised features are probably too specific and seem to not represent the full diversity of the image data. The joint-optimization process manages to balance out generic and specialized features without neutralizing them: mixing the supervision levels brings significant improvements (+2\%) to the performance, leading to a Weighted Accuracy of 0.945. \\
+We additionally compared the benefits introduced by the cost-sensitive loss [REF equation SOSR] with the cross-entropy loss. Our results show that with ImageNet weights the SOSR loss improves the Weighted Accuracy by 1\% and the accuracy by 3\%. \\
 In conclusion, the combination of the SSL pre-trained model, its fully supervised fine-tuning, and the cost-sensitive loss leads to a notable improvement of 8 Weighted Accuracy points over the baseline MIL-imagenet model.
 
 
@@ -41,17 +41,17 @@ ssl+sors            & 0.803 +/- 0.016          & 0.925 +/- 0.006          \\
 
 \subsection{Number of annotations vs Number of epochs}
 
-We have seen that both SSL and supervised training bring an improvement in the WSI classification task. To further investigate the relationship between these two supervision regimes, we trained models with only some of the fully supervised annotations (15, 65, 100\%) on top of intermediate SSL checkpoints.
+We have seen that both SSL and supervised pre-training bring together an improvement in the WSI classification task. To further investigate the relationship between these two supervision regimes, we trained models with only some of the fully supervised annotations (15, 65, 100\%) on top of intermediate SSL checkpoints.
 Results are reported in table \ref{tab:annots_epochs}. \\
-It appears that without SSL training (or with too few epochs of training), the supervised fine-tuning does not bring additional improvement in WSI classification. This is in line with the work of Chen et al. (Chen, Kornblith, Swersky, et al. 2020) that showed that an SSL model is up to 10x more label efficient than a supervised one. \\
-However, for the 100-epoch checkpoints, we observe an improvement of 2 points of the Weighted Accuracy when using 100\% of the tile annotations.
+It appears that without SSL pre-training (or with too few epochs of training), the supervised fine-tuning does not bring additional improvement in WSI classification. This is in line with the work of Chen et al. (Chen, Kornblith, Swersky, et al. 2020) that showed that a SSL model is up to 10x more label efficient than a supervised one. \\
+However, for the 100-epoch checkpoint, we observe an improvement of 2 points of the Weighted Accuracy when using 100\% of the tile annotations.
 Moreover, fine-tuning the models by mixed supervision with too few annotations (15\%) leads to a slight drop in WSI classification performances.
 Finally, we see  a diminution of the standard deviations across splits for the different pre-training policies, showing better stability for longer SSL training and more annotations. \\
 
 We draw different conclusions from these observations:
 \begin{itemize}
 \item In this context, it is always better to pre-train the feature extractor with SSL rather than only invest in annotations.
-\item The supervised fine-tuning needs enough annotations to bring an improvement to the WSI classification task. We can note however that even when considering the 100\% annotation settings, the supervised dataset ( approx. 5000 images) is still rather small in comparison to traditional image datasets.
+\item The supervised fine-tuning needs enough annotations to bring an improvement to the WSI classification task. We can note however that even when considering the 100\% annotation settings, the supervised dataset (approx. 5000 images) is still rather small in comparison to traditional image datasets.
 \item A full SSL training is mandatory to leverage this small amount of supervised data. 
 \end{itemize}
 
