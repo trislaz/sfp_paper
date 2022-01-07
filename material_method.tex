@@ -12,9 +12,6 @@ The Tissue Net Challenge \citep{drivendata_tissuenet_nodate} organized in 2020, 
 \label{fig:uterine_cervix}
 \end{figure}
 
-
-
-
 \subsection{Fully supervised dataset}
 
 5926 annotated Regions of Interest (ROIs) of fixed size 300x300 micrometers were provided. Each ROI had roughly the same size as a tile at 10x magnification and were labeled by the severity of the lesion it contained: “Normal” (0) if tissue was normal, (1) LSIL or (2) HSIL if it presented precancerous lesions that could have malignant potential and (3) invasive squamous carcinoma (Table \ref{tab:data-summary}).
@@ -37,7 +34,7 @@ The Tissue Net Challenge \citep{drivendata_tissuenet_nodate} organized in 2020, 
 \end{table}
 
 \subsection{Weakly supervised dataset}
-The dataset was composed of 1015 WSIs acquired from 20 different centers in France at an average resolution of 0.234 +/- 0.0086 mpp (40X). The slide resolution varied slightly due to the multicentric provenance of the data. The class of the WSI corresponded to the class of the most severe lesions it contained (grade from 0 to 3 also). All the native WS image formats were converted to pyramidal TIFF (Tagged Image File Format).
+The dataset was composed of 1015 WSIs acquired from 20 different centers in France at an average resolution of 0.234 +/- 0.0086 mpp (40X). The slide resolution varied slightly due to the multicentric provenance of the data. The class of the WSI corresponded to the class of the most severe lesions it contained (grade from 0 to 3 also). All the native WSI formats were converted to pyramidal TIFF (Tagged Image File Format).
 Both the WSI-level and tile-level labels have been attributed by a consortium of expert pathologists (Table \ref{tab:data-summary}).
 
 \subsection{Misclassification Costs}
